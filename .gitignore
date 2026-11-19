@@ -9,5 +9,5 @@
 *.midi
 *.pdf
 *~
-
+.DS_Store
 /test_data
