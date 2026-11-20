@@ -37,8 +37,7 @@ for key in NO_AUGMENT.keys():
 class AudioScoreRetrievalPool(object):
 
     def __init__(self, images, specs, o2c_maps,
-                 spec_context, sheet_context, staff_height,
-                #  spec_context=SPEC_CONTEXT, sheet_context=SHEET_CONTEXT, staff_height=SYSTEM_HEIGHT,
+                 spec_context=SPEC_CONTEXT, sheet_context=SHEET_CONTEXT, staff_height=SYSTEM_HEIGHT,
                  data_augmentation=None, shuffle=True):
 
         self.images = images
@@ -237,12 +236,12 @@ def onset_to_coordinates(alignment, mdict, note_events):
     Compute onset to coordinate mapping
     """
     onset_to_coord = np.zeros((0, 2), dtype=int)
-    coord_to_system = np.zeros((0, 2), dtype=int)
-    # systems = dict()
+
     for m_objid, e_idx in alignment:
 
         # get note mungo and midi note event
-        m, e = mdict[m_objid][0], note_events[e_idx]
+        m, e = mdict[m_objid], note_events[e_idx]
+
         # compute onset frame
         onset_frame = notes_to_onsets([e], dt=1.0 / FPS)
 
@@ -251,14 +250,10 @@ def onset_to_coordinates(alignment, mdict, note_events):
 
         # keep mapping
         entry = np.asarray([np.append(onset_frame,cx)], dtype=int)#[np.newaxis]
-        
-        system_id = mdict[m_objid][1]
-        system_entry = np.array([np.append(cx, system_id)])
         if onset_frame not in onset_to_coord[:, 0]:
             onset_to_coord = np.concatenate((onset_to_coord, entry), axis=0)
-            coord_to_system = np.concatenate((coord_to_system, system_entry), axis=0)
 
-    return onset_to_coord, coord_to_system
+    return onset_to_coord
 
 
 def systems_to_rois(sys_mungos, window_top=10, window_bottom=10):
@@ -333,6 +328,7 @@ def unwrap_sheet_image(image, system_mungos, mdict, window_top=100, window_botto
     x_offset = 0
     img_start = 0
     for j, sys_mungo in enumerate(system_mungos):
+
         # get current roi
         r = rois[j]
 
@@ -357,11 +353,12 @@ def unwrap_sheet_image(image, system_mungos, mdict, window_top=100, window_botto
 
         # get noteheads of current staff
         staff_noteheads = [mdict[i] for i in sys_mungo.inlinks if mdict[i].clsname == 'notehead-full']
+
         # compute unwraped coordinates
         for n in staff_noteheads:
             n.x -= r[0, 0]
             n.y += x_offset - r[0, 1]
-            un_wrapped_coords[n.objid] = [n, j]
+            un_wrapped_coords[n.objid] = n
 
         x_offset += (r[1, 1] - r[0, 1])
         img_start = img_end
@@ -372,7 +369,7 @@ def unwrap_sheet_image(image, system_mungos, mdict, window_top=100, window_botto
     return un_wrapped_image, un_wrapped_coords
 
 
-def prepare_piece_data(collection_dir, piece_name, aug_config=NO_AUGMENT, require_audio=True, load_midi_matrix=False, get_system_index=False):
+def prepare_piece_data(collection_dir, piece_name, aug_config=NO_AUGMENT, require_audio=True, load_midi_matrix=False):
     """
 
     :param collection_dir:
@@ -383,6 +380,7 @@ def prepare_piece_data(collection_dir, piece_name, aug_config=NO_AUGMENT, requir
     # piece loading
     piece = Piece(root=collection_dir, name=piece_name)
     score = piece.load_score(piece.available_scores[0])
+    
     # get mungos
     mungos = score.load_mungos()
     mdict = {m.objid: m for m in mungos}
@@ -405,7 +403,6 @@ def prepare_piece_data(collection_dir, piece_name, aug_config=NO_AUGMENT, requir
     spectrograms = []
     midi_matrices = []
     onset_to_coord_maps = []
-    coord_to_system_maps = []
     for performance_key in piece.available_performances:
         # check if performance matches augmentation pattern
         tempo, synth = performance_key.split("tempo-")[1].split("_", 1)
@@ -430,17 +427,14 @@ def prepare_piece_data(collection_dir, piece_name, aug_config=NO_AUGMENT, requir
         spec = performance.load_spectrogram()
         spectrograms.append(spec)
         # compute onset to coordinate mapping
-        onset_to_coord, coord_to_system = onset_to_coordinates(alignment, un_wrapped_coords, note_events)
+        onset_to_coord = onset_to_coordinates(alignment, un_wrapped_coords, note_events)
         onset_to_coord_maps.append(onset_to_coord)
-        coord_to_system_maps.append(coord_to_system)
+
         if load_midi_matrix:
             midi = performance.load_midi_matrix()
             midi_matrices.append(midi)
-            
     if load_midi_matrix:
         return un_wrapped_image, spectrograms, onset_to_coord_maps, midi_matrices
-    elif get_system_index:
-        return un_wrapped_image, spectrograms, onset_to_coord_maps, coord_to_system_maps
     else:
         return un_wrapped_image, spectrograms, onset_to_coord_maps
 
