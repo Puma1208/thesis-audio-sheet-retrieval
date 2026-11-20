@@ -1,35 +1,35 @@
-# Implementation for parallelization from:
-# https://github.com/pytorch/examples/blob/main/distributed/ddp-tutorial-series/multigpu.py
+"""
+Train the CNN-GRU audio-sheet music model with a triplet contrastive loss,
+using PyTorch DistributedDataParallel
 
+Usage from the repository root:
+torchrun --nproc_per_node=<n_gpus> -m thesis.scripts.train --data_dir <snippets_dir>
+    
+Setup for parallelization based on:
+https://github.com/pytorch/examples/blob/main/distributed/ddp-tutorial-series/multigpu.py
+"""
 
 import argparse
 import os
-import socket
 
-from modules.MSMD_Dataset import MSMD_Dataset
-from modules.CNN_GRU import CNN_GRU
-from modules.Triplet_Contrastive_Loss import Triplet_Contrastive_Loss
-from modules.MSMD_Trainer import MSMD_Trainer_Torchrun_Tracking
+from thesis.modules.MSMD_Dataset import MSMD_Dataset
+from thesis.modules.CNN_GRU import CNN_GRU
+from thesis.modules.Triplet_Contrastive_Loss import Triplet_Contrastive_Loss
+from thesis.modules.MSMD_Trainer import MSMD_Trainer_Torchrun_Tracking
 import torch
 import time
 import json
 from torch.utils.data import DataLoader
 
-import torch.multiprocessing as mp
 from torch.utils.data.distributed import DistributedSampler
-from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
-from torch import nn
-import torch.distributed as dist
 
 def ddp_setup():
-    
+
     init_process_group(backend='nccl')
     torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
 
-    
-
-def main(data_dir:str, train_split:str, validation_split:str, save_every:int, batch_size:int, total_epochs:int, snapshot_path:str='snapshot.pt'):
+def main(data_dir:str, train_split:str, validation_split:str, save_every:int, batch_size:int, total_epochs:int):
     ddp_setup()
 
 
@@ -56,10 +56,10 @@ def main(data_dir:str, train_split:str, validation_split:str, save_every:int, ba
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)#, weight_decay=.005)
     loss = Triplet_Contrastive_Loss(margin=margin, K_negative=K_negative)
 
-    
+
     experiment_details = f'{batch_size}_{total_epochs}_{n_performances}_{snippets_batch_size}_{lr}_{K_negative}_{margin}'
     print(f'Experiment details: {experiment_details}')
-    msmd_trainer = MSMD_Trainer_Torchrun_Tracking(model=model, 
+    msmd_trainer = MSMD_Trainer_Torchrun_Tracking(model=model,
                                 train_data=msmd_loader_train,
                                 validation_data=msmd_loader_validation,
                                 optimizer=optimizer,
@@ -68,7 +68,7 @@ def main(data_dir:str, train_split:str, validation_split:str, save_every:int, ba
                                 experiment_details=experiment_details)
     msmd_trainer.train(total_epochs)
     destroy_process_group()
-    
+
 
 if __name__ == '__main__':
     """
@@ -96,5 +96,3 @@ if __name__ == '__main__':
 
     timer_end = time.perf_counter()
     print(f'Entire time taken: {timer_end-timer_start:.4f} seconds')
-
-
