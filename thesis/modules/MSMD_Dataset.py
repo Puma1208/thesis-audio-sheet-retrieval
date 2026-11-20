@@ -99,9 +99,3 @@ class MSMD_Dataset(Dataset):
                                              'excerpt_path':excerpt_name})
         self.snippets_excerpts_df = pd.DataFrame(snippets_excerpts_rows)
 
-
-# train_split_file = json.load(open('data/msmd_train_split.json'))
-
-# msmd_dataset = MSMD_Dataset(dir='/home/I6194030/MSMD_SNIPPETS_2',
-#                             pieces=train_split_file,
-#                             n_performances=15)

@@ -1,24 +1,10 @@
-
 import os
 
-# set paths
-EXP_ROOT = "/Users/margarita/Documents/DKE Master/Master Thesis - Music Score Localisation/audio_sheet_retrieval/"
-DATA_ROOT_MSMD = "/Users/margarita/Documents/DKE Master/Master Thesis - Music Score Localisation/msmd_aug_v1-1_no-audio/"
-# EXP_ROOT = "/home/matthias/experiments/audio_sheet_retrieval/"
-# DATA_ROOT_MSMD = '/media/matthias/Data/msmd_aug/'
-
-# get hostname
-hostname = os.uname()[1]
-
-# adopted paths
-if hostname == "Margaritas-MacBook-Pro.local":
-    EXP_ROOT = "/Users/margarita/Documents/DKE Master/Master Thesis - Music Score Localisation/audio_sheet_retrieval/"
-    DATA_ROOT_MSMD = "/Users/margarita/Documents/DKE Master/Master Thesis - Music Score Localisation/msmd_aug_v1-1_no-audio/"
-        
-elif hostname in ["rechenknecht0.cp.jku.at", "rechenknecht1.cp.jku.at"]:
-    EXP_ROOT = "/home/matthias/experiments/audio_sheet_retrieval/"
-    DATA_ROOT_MSMD = '/home/matthias/shared/datasets/msmd_aug/'
-
-elif hostname == "mdhp":
-    EXP_ROOT = "/home/matthias/experiments/audio_sheet_retrieval/"
-    DATA_ROOT_MSMD = '/media/matthias/Data/Data/msmd/'
+# Paths are configured through environment variables, e.g.
+#   export EXP_ROOT=/path/to/experiments
+#   export DATA_ROOT_MSMD=/path/to/msmd_aug_v1-1_no-audio
+#
+# EXP_ROOT:       where model folders are created and parameters/results are dumped
+# DATA_ROOT_MSMD: root directory of the MSMD dataset
+EXP_ROOT = os.environ.get("EXP_ROOT", os.path.join(os.getcwd(), "experiments"))
+DATA_ROOT_MSMD = os.environ.get("DATA_ROOT_MSMD", os.path.join(os.getcwd(), "data", "msmd"))

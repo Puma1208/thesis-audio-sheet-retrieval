@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from tqdm import tqdm
 import json
+import argparse
 
 # MSMD Dataset
 class MSMD_Dataset(Dataset):
@@ -346,21 +347,28 @@ class CNN_GRU(nn.Module):
         return score_cnn_gru, spectrogram_cnn_gru
 
     
-msmd_images_dir = '/home/I6194030/MSMD_SNIPPETS_2'
+parser = argparse.ArgumentParser(description='Embed the test set and retrieve score snippets for an audio excerpt.')
+parser.add_argument('--data_dir', required=True, help='directory with the snippets created by create_dataset.py')
+parser.add_argument('--model_path', required=True, help='trained model snapshot (.pt)')
+parser.add_argument('--test_split', default='data/splits/msmd_test_split.json')
+parser.add_argument('--test_split_snippets', default='data/splits/msmd_test_split_snippets_only.json')
+args = parser.parse_args()
+
+msmd_images_dir = args.data_dir
 
 # model = CNN_GRU()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 model = CNN_GRU(1, 1, 32, 32, 128, 128, 16).to(device)
 
-path = '/home/I6194030/audio_sheet_retrieval/models/snapshot_GPU_0_32_50_5_5_0.01_10_0.05.pt'
-# model.load_state_dict(torch.load('/home/I6194030/audio_sheet_retrieval/model_20240325_211405_7'))
-model.load_state_dict(torch.load(path))
+model.load_state_dict(torch.load(args.model_path, map_location=device))
 model.eval()
 
 # Make all snippets go through the network and compute their vectors
-testing_set_excerpt = json.load(open('/home/I6194030/audio_sheet_retrieval/msmd_test_split.json'))
-testing_set_snippets = json.load(open('/home/I6194030/audio_sheet_retrieval/msmd_test_split_snippets_only.json'))
+with open(args.test_split) as f:
+    testing_set_excerpt = json.load(f)
+with open(args.test_split_snippets) as f:
+    testing_set_snippets = json.load(f)
 
 
 msmd_excerpts_test = MSMD_Dataset(root_dir=msmd_images_dir, pieces=testing_set_excerpt, n_performances=1)

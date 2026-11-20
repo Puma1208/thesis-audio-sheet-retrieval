@@ -1,7 +1,8 @@
-# Implementatino for parallelization from:
+# Implementation for parallelization from:
 # https://github.com/pytorch/examples/blob/main/distributed/ddp-tutorial-series/multigpu.py
 
 
+import argparse
 import os
 import socket
 
@@ -28,7 +29,7 @@ def ddp_setup():
 
     
 
-def main(save_every:int, batch_size:int, total_epochs:int, snapshot_path:str='snapshot.pt'):
+def main(data_dir:str, train_split:str, validation_split:str, save_every:int, batch_size:int, total_epochs:int, snapshot_path:str='snapshot.pt'):
     ddp_setup()
 
 
@@ -40,9 +41,11 @@ def main(save_every:int, batch_size:int, total_epochs:int, snapshot_path:str='sn
 
 
     # Load train objects: dataset, model, optimizer
-    msmd_images_dir = '/home/I6194030/MSMD_SNIPPETS_2'
-    train_split_file = json.load(open('data/msmd_train_split.json'))
-    validation_split_file = json.load(open('data/msmd_validation_split.json'))
+    msmd_images_dir = data_dir
+    with open(train_split) as f:
+        train_split_file = json.load(f)
+    with open(validation_split) as f:
+        validation_split_file = json.load(f)
 
 
     msmd_dataset_train = MSMD_Dataset(dir=msmd_images_dir, pieces=train_split_file, n_performances=n_performances, snippets_batch_size=snippets_batch_size)
@@ -72,13 +75,24 @@ if __name__ == '__main__':
     main
     """
 
+    parser = argparse.ArgumentParser(description='Train the CNN-GRU audio-sheet music model (launch with torchrun).')
+    parser.add_argument('--data_dir', required=True, help='directory with the snippets created by create_dataset.py')
+    parser.add_argument('--train_split', default='data/splits/msmd_train_split.json')
+    parser.add_argument('--validation_split', default='data/splits/msmd_validation_split.json')
+    parser.add_argument('--save_every', type=int, default=5)
+    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--total_epochs', type=int, default=50)
+    args = parser.parse_args()
+
     timer_start = time.perf_counter()
 
     print(f'device count: {torch.cuda.device_count()}')
-    save_every = 5
-    batch_size = 64
-    total_epochs = 50
-    main(save_every=save_every, total_epochs=total_epochs, batch_size=batch_size)#, snapshot_path='snapshot_2.pt')
+    main(data_dir=args.data_dir,
+         train_split=args.train_split,
+         validation_split=args.validation_split,
+         save_every=args.save_every,
+         total_epochs=args.total_epochs,
+         batch_size=args.batch_size)
 
     timer_end = time.perf_counter()
     print(f'Entire time taken: {timer_end-timer_start:.4f} seconds')

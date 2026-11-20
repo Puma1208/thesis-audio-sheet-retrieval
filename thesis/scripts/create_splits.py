@@ -5,11 +5,11 @@ import torch
 import os 
 from torch.utils.data import random_split
 import json
+import argparse
 
-def main():
-    msmd_piece_images_dir = '/home/I6194030/MSMD_SNIPPETS_2'
-    path_train_split = 'data'
-    path_valid_split = 'data'
+def main(msmd_piece_images_dir, output_dir):
+    path_train_split = output_dir
+    path_valid_split = output_dir
 
     pieces = sorted(os.listdir(msmd_piece_images_dir))
     generator = torch.Generator().manual_seed(45)
@@ -31,4 +31,8 @@ if __name__ == '__main__':
     """
     main
     """
-    main()
+    parser = argparse.ArgumentParser(description='Create a 70/30 train/validation split of the MSMD pieces.')
+    parser.add_argument('--data_dir', required=True, help='directory with the snippets created by create_dataset.py')
+    parser.add_argument('--output_dir', default='data/splits')
+    args = parser.parse_args()
+    main(args.data_dir, args.output_dir)

@@ -3,6 +3,7 @@ from __future__ import print_function
 from msmd.data_model.piece import Piece
 from audio_sheet_retrieval.utils.data_pools import prepare_piece_data, AudioScoreRetrievalPool, stack_images, unwrap_sheet_image
 import sys
+import argparse
 import yaml
 from tqdm import tqdm
 import os
@@ -12,13 +13,7 @@ from msmd.alignments import align_score_to_performance
 
 import numpy as np
 
-sys.path.append(path.abspath('/home/I6194030/msmd'))
-
-def main():
-
-    config_file = '/home/I6194030/audio_sheet_retrieval/audio_sheet_retrieval/exp_configs/mutopia_no_aug.yaml'
-    DATA_ROOT_MSMD = '/home/I6194030/msmd_aug_v1-1_no-audio/'
-    snippets_output_dir = '/home/I6194030/MSMD_SNIPPETS_2/'
+def main(config_file, DATA_ROOT_MSMD, snippets_output_dir):
 
 
     with open(config_file, 'rb') as f:
@@ -130,4 +125,9 @@ if __name__ == '__main__':
     """
     main
     """
-    main()
+    parser = argparse.ArgumentParser(description='Extract sheet snippets and spectrogram excerpts from MSMD.')
+    parser.add_argument('--msmd_root', required=True, help='root directory of the MSMD dataset')
+    parser.add_argument('--output_dir', required=True, help='where the extracted snippets are written')
+    parser.add_argument('--config', default='audio_sheet_retrieval/exp_configs/mutopia_no_aug.yaml')
+    args = parser.parse_args()
+    main(args.config, args.msmd_root, args.output_dir)
