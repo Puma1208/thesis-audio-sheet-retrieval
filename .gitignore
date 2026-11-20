@@ -11,3 +11,7 @@
 *~
 .DS_Store
 /test_data
+drafts/
+
+DATA_COLLECTION_*/
+*.egg-info/
