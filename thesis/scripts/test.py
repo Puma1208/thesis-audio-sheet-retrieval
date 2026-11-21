@@ -4,7 +4,7 @@ snippets, then find the score snippets most similar to a query exerpt
 (with cosine similarity).
 
 Usage (from the repository root):
-    python -m thesis.script.test --data_dir <snippets_dir> --model_path <snapshot.pt>
+    python -m thesis.scripts.test --data_dir <snippets_dir> --model_path <snapshot.pt>
 """
 
 import torch
@@ -21,6 +21,7 @@ import argparse
 from thesis.modules.MSMD_Dataset import MSMD_Dataset
 from thesis.modules.CNN_GRU import CNN_GRU
 
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='Embed the test set and retrieve score snippets for an audio excerpt.')
 parser.add_argument('--data_dir', required=True, help='directory with the snippets created by create_dataset.py')
@@ -28,12 +29,12 @@ parser.add_argument('--model_path', required=True, help='trained model snapshot 
 parser.add_argument('--test_split', default='data/splits/msmd_test_split.json')
 parser.add_argument('--test_split_snippets', default='data/splits/msmd_test_split_snippets_only.json')
 parser.add_argument('--output_dim', type=int, default=64, help="must match the trained model")
-parser.add_argument('--query_index', type=int, default=30m help='index of the audio excerpt used as query')
+parser.add_argument('--query_index', type=int, default=30, help='index of the audio excerpt used as query')
+parser.add_argument('--plot', default=None, help='save a figure of the query and its best match to this file')
 args = parser.parse_args()
 
 msmd_images_dir = args.data_dir
 
-# model = CNN_GRU()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 model = CNN_GRU(1, 1, 32, 32, 128, 128, args.output_dim).to(device)
@@ -115,25 +116,31 @@ for batch in score_vectors:
 
 print(batches_cos_max)
 print(batches_indeces_max)
-############################ Visualise excerpts ##########################
 
-# data = msmd_excerpts_test[audio_vector_index]
-# print(data[1].shape)
+def plot_query_and_match(query_exerpts, matched_snippets, out_file):
+    """
+    Top row: audio exceprts of the query
+    Bottom row: best-matching score snippets.
+    """
+
+    n = len(query_exerpts)
+    fig, axes = plt.subplots(2, n, figsize=(2 * n, 5), squeeze=False)
+    for i in range(n):
+        axes[0, i].imshow(query_exerpts[i].squeeze(), cmap='magma', origin='lower')
+        axes[1, i].imshow(matched_snippets[i].squeeze(), cmap='gray')
+        axes[0, i].axis('off')
+        axes[1, i].axis('off')
+    axes[0, 0].set_title('Audio query', loc='left')
+    axes[1, 0].set_title('Retrieved score', loc='left')
+    plt.savefig(out_file, bbox_inches='tight')
+    plt.close(fig)
+    print(f'Plot saved to {out_file}')
 
 
-# # for i in range(starting_snippet_excerpt_index, starting_snippet_excerpt_index+self.snippets_batch_size):
-# #             snippet = io.read_image(os.path.join(snippets_dir, all_snippets_perf[i]), mode=io.ImageReadMode.GRAY)
-# #             snippets.append(snippet)
-
-# plt.figure('Alignment', figsize=(20, 10))
-# # i = 1
-# for i, im in enumerate(data[1]):
-#     plt.subplot(1, data[1].shape[0], i+1)
-
-#     plt.imshow(im, cmap='magma', origin='lower')
-# # plt.ylim(note_object.middle[0]+100, note_object.middle[0]-100)
-# # plt.subplot(2, 1, 2)
-# # plt.imshow(test_spectrogram)
-# # plt.xlim(onset_frame-100, onset_frame+100)
-# # plt.show()
-# plt.savefig('alignment.png', bbox_inches='tight')
+if args.plot:
+    # best batch overall, then the position of the best snippet sequence in the dataset
+    best_batch = max(range(len(batches_cos_max)), key=lambda b: batches_cos_max[b])
+    best_index = best_batch * msmd_snippets_test_loader.batch_size + batches_indeces_max[best_batch]
+    query_exerpts = msmd_excerpts_test[args.query_index][1]
+    matched_snippets = msmd_snippets_test[best_index][0]
+    plot_query_and_match(query_exerpts, matched_snippets, args.plot)
