@@ -19,6 +19,7 @@ parser.add_argument('--model_path', required=True, help='trained model snapshot 
 parser.add_argument('--test_split', default='data/splits/msmd_test_split.json')
 parser.add_argument('--test_split_snippets', default='data/splits/msmd_test_split_snippets_only.json')
 parser.add_argument('--output_dim', type=int, default=64, help="must match the trained model")
+parser.add_argument('--query_index', type=int, default=30m help='index of the audio excerpt used as query')
 args = parser.parse_args()
 
 msmd_images_dir = args.data_dir
@@ -92,13 +93,7 @@ with torch.inference_mode():
 print(f'score vectors: {len(score_vectors)}, {(score_vectors[0].shape)}')
 ############################ Compute the similarity between the vectors and show the corresponding sequence ##########################
 
-audio_vector_index = 30
-audio_vector = audio_vectors[audio_vector_index]
-best_matching_index = 0
-loaders_matching = []
-start_idx = best_matching_index * msmd_snippets_test_loader.batch_size
-end_idx = min(start_idx + msmd_snippets_test_loader.batch_size, len(msmd_snippets_test_loader))
-original_indices = list(range(start_idx, end_idx))
+audio_vector = audio_vectors[args.query_index]
 batches_cos_max = []
 batches_indeces_max = []
 for batch in score_vectors:
