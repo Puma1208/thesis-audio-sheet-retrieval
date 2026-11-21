@@ -37,11 +37,11 @@ with open(args.test_split_snippets) as f:
     testing_set_snippets = json.load(f)
 
 
-msmd_excerpts_test = MSMD_Dataset(root_dir=msmd_images_dir, pieces=testing_set_excerpt, n_performances=1)
+msmd_excerpts_test = MSMD_Dataset(dir=msmd_images_dir, pieces=testing_set_excerpt, n_performances=1)
 msmd_excerpts_test_loader = DataLoader(msmd_excerpts_test, batch_size=1, shuffle=False)
 
 
-msmd_snippets_test = MSMD_Dataset(root_dir=msmd_images_dir, pieces=testing_set_snippets, n_performances=1)
+msmd_snippets_test = MSMD_Dataset(dir=msmd_images_dir, pieces=testing_set_snippets, n_performances=1)
 msmd_snippets_test_loader = DataLoader(msmd_snippets_test, batch_size=64, shuffle=False)
 
 # print(len(msmd_excerpts_test.snippets_excerpts_df), len(msmd_snippets_test.snippets_excerpts_df))
