@@ -1,3 +1,12 @@
+"""
+Evaluate a trained CNN-GRU: embed all the test audio excepts and score
+snippets, then find the score snippets most similar to a query exerpt
+(with cosine similarity).
+
+Usage (from the repository root):
+    python -m thesis.script.test --data_dir <snippets_dir> --model_path <snapshot.pt>
+"""
+
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
