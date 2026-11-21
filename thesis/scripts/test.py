@@ -18,6 +18,7 @@ parser.add_argument('--data_dir', required=True, help='directory with the snippe
 parser.add_argument('--model_path', required=True, help='trained model snapshot (.pt)')
 parser.add_argument('--test_split', default='data/splits/msmd_test_split.json')
 parser.add_argument('--test_split_snippets', default='data/splits/msmd_test_split_snippets_only.json')
+parser.add_argument('--output_dim', type=int, default=64, help="must match the trained model")
 args = parser.parse_args()
 
 msmd_images_dir = args.data_dir
@@ -25,9 +26,10 @@ msmd_images_dir = args.data_dir
 # model = CNN_GRU()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-model = CNN_GRU(1, 1, 32, 32, 128, 128, 16).to(device)
+model = CNN_GRU(1, 1, 32, 32, 128, 128, args.output_dim).to(device)
 
-model.load_state_dict(torch.load(args.model_path, map_location=device))
+snapshot = torch.load(args.model_path, map_location=device)
+model.load_state_dict(snapshot['MODEL_STATE'])
 model.eval()
 
 # Make all snippets go through the network and compute their vectors
