@@ -10,18 +10,14 @@ Usage (from the repository root):
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-import os
 
 import matplotlib.pyplot as plt
-import pandas as pd
 from tqdm import tqdm
 import json
 import argparse
 
 from thesis.modules.MSMD_Dataset import MSMD_Dataset
 from thesis.modules.CNN_GRU import CNN_GRU
-
-import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='Embed the test set and retrieve score snippets for an audio excerpt.')
 parser.add_argument('--data_dir', required=True, help='directory with the snippets created by create_dataset.py')
@@ -56,8 +52,6 @@ msmd_excerpts_test_loader = DataLoader(msmd_excerpts_test, batch_size=1, shuffle
 
 msmd_snippets_test = MSMD_Dataset(dir=msmd_images_dir, pieces=testing_set_snippets, n_performances=1)
 msmd_snippets_test_loader = DataLoader(msmd_snippets_test, batch_size=64, shuffle=False)
-
-# print(len(msmd_excerpts_test.snippets_excerpts_df), len(msmd_snippets_test.snippets_excerpts_df))
 
 
 ############################ AUDIO EXCERPTS going through the network to compute the  vectors ##########################
