@@ -101,15 +101,10 @@ audio_vector = audio_vectors[args.query_index]
 batches_cos_max = []
 batches_indeces_max = []
 for batch in score_vectors:
-    print(f'batc: {batch.shape}')
     cos_similarity = F.cosine_similarity(audio_vector, batch, dim=1)
-    # print(cos_similarity)
 
     batches_cos_max.append(torch.max(cos_similarity).item())
     batches_indeces_max.append(torch.argmax(cos_similarity).item())
-
-print(batches_cos_max)
-print(batches_indeces_max)
 
 def plot_query_and_match(query_exerpts, matched_snippets, out_file):
     """
@@ -134,6 +129,9 @@ def plot_query_and_match(query_exerpts, matched_snippets, out_file):
 if args.plot:
     # best batch overall, then the position of the best snippet sequence in the dataset
     best_batch = max(range(len(batches_cos_max)), key=lambda b: batches_cos_max[b])
+    print(f'Best match: snippet sequence {best_batch * msmd_snippets_test_loader.batch_size + batches_indeces_max[best_batch]} '
+      f'(cosine similarity {batches_cos_max[best_batch]:.3f})')
+
     best_index = best_batch * msmd_snippets_test_loader.batch_size + batches_indeces_max[best_batch]
     query_exerpts = msmd_excerpts_test[args.query_index][1]
     matched_snippets = msmd_snippets_test[best_index][0]
