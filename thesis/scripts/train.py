@@ -25,9 +25,12 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.distributed import init_process_group, destroy_process_group
 
 def ddp_setup():
-
-    init_process_group(backend='nccl')
-    torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
+    if torch.cuda.is_available():
+        init_process_group(backend='nccl')
+        torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
+    else:
+        # CPU fallback for quick test run
+        init_process_group(backend='gloo')
 
 def main(data_dir:str, train_split:str, validation_split:str, save_every:int, batch_size:int, total_epochs:int):
     ddp_setup()
