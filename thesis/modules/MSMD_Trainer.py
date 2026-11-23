@@ -2,7 +2,7 @@
 # https://github.com/pytorch/examples/blob/main/distributed/ddp-tutorial-series/multigpu_torchrun.py
 
 import os
-import torch 
+import torch
 import json
 import pandas as pd
 from torch.utils.data import DataLoader
@@ -12,8 +12,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 class MSMD_Trainer:
     def __init__(
-            self, 
-            model:torch.nn.Module, 
+            self,
+            model:torch.nn.Module,
             train_data: DataLoader,
             optimizer:torch.optim.Optimizer,
             loss_function:torch.nn.Module,
@@ -35,7 +35,7 @@ class MSMD_Trainer:
             self.run_epoch(epoch)
             if self.gpu_id==0 and epoch%self.save_every==0:
                 self.save_checkpoint(epoch)
-    
+
     # def eval(self, max_epochs:int):
     #     for epoch in range(max_epochs):
     #         self.model.module.eval()
@@ -75,8 +75,8 @@ class MSMD_Trainer:
 
 class MSMD_Trainer_Torchrun:
     def __init__(
-            self, 
-            model:torch.nn.Module, 
+            self,
+            model:torch.nn.Module,
             train_data: DataLoader,
             optimizer:torch.optim.Optimizer,
             loss_function:torch.nn.Module,
@@ -109,7 +109,7 @@ class MSMD_Trainer_Torchrun:
             if self.gpu_id==0 and epoch%self.save_every==0:
                 self.save_snapshot(epoch)
         self.writer.close()
-    
+
     # def eval(self, max_epochs:int):
     #     for epoch in range(max_epochs):
     #         self.model.module.eval()
@@ -127,7 +127,7 @@ class MSMD_Trainer_Torchrun:
             excerpts = excerpts.to(self.gpu_id)
             # print(f'    GPU {self.gpu_id} | EPOCH {epoch} | Batch size {batch_size} | Steps {i}/{len(self.train_data)}')
             losses_epoch += self.run_batch(snippets.to(torch.float32), excerpts.to(torch.float32))
-        
+
         epoch_loss = losses_epoch/i+1
         print(f'Epoch loss: {epoch_loss}')
         self.writer.add_scalars('Training Loss', {'Triplet Loss': epoch_loss}, epoch)
@@ -164,8 +164,8 @@ class MSMD_Trainer_Torchrun:
 
 class MSMD_Trainer_Torchrun_Tracking:
     def __init__(
-            self, 
-            model:torch.nn.Module, 
+            self,
+            model:torch.nn.Module,
             train_data: DataLoader,
             validation_data: DataLoader,
             optimizer:torch.optim.Optimizer,
@@ -212,7 +212,7 @@ class MSMD_Trainer_Torchrun_Tracking:
         self.writer.close()
         self.snippets_excerpts_df = pd.DataFrame(self.experiments_metrics)
         self.snippets_excerpts_df.to_csv(self.metric_file)
-    
+
     # def eval(self, max_epochs:int):
     #     for epoch in range(max_epochs):
     #         self.model.module.eval()
@@ -238,7 +238,7 @@ class MSMD_Trainer_Torchrun_Tracking:
             losses_epoch_train += l_train
             if i%200==0:
                 print(f' {self.gpu_id} TRAIN LOSS {i}/{len(self.train_data)} Last loss: {l_train}')
-        
+
         epoch_loss_train = losses_epoch_train/len(self.train_data)
 
         # Validation
@@ -255,7 +255,7 @@ class MSMD_Trainer_Torchrun_Tracking:
                     print(f' {self.gpu_id} VALIDATION LOSS {i}/{len(self.validation_data)} Last loss: {l_validation}')
             epoch_loss_validation = losses_epoch_validation/len(self.validation_data)
 
-        
+
         # print(f'    GPU {self.gpu_id} | EPOCH {epoch} | Epoch loss: {epoch_loss}')
         self.train_losses.append(epoch_loss_train)
         self.validation_losses.append(epoch_loss_validation)
@@ -263,7 +263,7 @@ class MSMD_Trainer_Torchrun_Tracking:
 
         self.writer.add_scalars('Training Loss', {'Triplet Loss': epoch_loss_train, 'Validation TL': epoch_loss_validation}, epoch)
         self.epochs_run += 1
-        
+
 
     def run_batch_train(self, snipepts, excerpts):
         # print(f'RUN BATCH: {self.model.module.training}')
@@ -277,7 +277,7 @@ class MSMD_Trainer_Torchrun_Tracking:
         self.optimizer.step()
         return loss.item()
         # self.eval(10)
-    
+
     def run_batch_eval(self, snippets, excerpts):
         v_output_score, v_output_audio = self.model(snippets, excerpts)
         validation_loss = self.loss_function(v_output_score[0], v_output_audio[0])
@@ -298,10 +298,10 @@ class MSMD_Trainer_Torchrun_Tracking:
         self.model.load_state_dict(snapshot['MODEL_STATE'])
         self.epochs_run = snapshot['EPOCHS_RUN']
         print(f'Resuming training from snapshot at Epoch {self.epochs_run}')
-    
+
     def save_metrics(self):
         print(f'    GPU {self.gpu_id} FROM LOSSES: {self.train_losses} -> {self.train_losses[-1]}')
-        self.experiments_metrics.append({'gpu':self.gpu_id, 
+        self.experiments_metrics.append({'gpu':self.gpu_id,
                                         'epochs_run':self.epochs_run,
                                         'training_loss':self.train_losses[-1],
                                         'validation_loss':self.validation_losses[-1]
