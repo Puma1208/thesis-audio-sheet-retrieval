@@ -17,3 +17,6 @@ DATA_COLLECTION_*/
 *.egg-info/
 
 .pytest_cache/
+*.pt
+metrics_DDP/
+runs/
