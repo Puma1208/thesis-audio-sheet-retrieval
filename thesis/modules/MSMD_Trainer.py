@@ -3,16 +3,14 @@
 
 import os
 import torch
-import json
 import pandas as pd
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel as DDP
-from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 class MSMD_Trainer_Torchrun_Tracking:
     """
-    Trains the CNN-GRu with DDP, runs the validation every epoch, 
+    Trains the CNN-GRU with DPP, runs the validation every epoch, 
     saves 
     - the snapshots and logs in train/validation
     - losses to metrics_DPP/
@@ -61,7 +59,6 @@ class MSMD_Trainer_Torchrun_Tracking:
             self.run_epoch(epoch)
             if self.gpu_id==0 and (epoch+1)%self.save_every==0:
                 self.save_snapshot(epoch)
-                self.save_metrics()
         self.writer.close()
         self.snippets_excerpts_df = pd.DataFrame(self.experiments_metrics)
         self.snippets_excerpts_df.to_csv(self.metric_file)
