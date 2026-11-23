@@ -11,6 +11,13 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 class MSMD_Trainer_Torchrun_Tracking:
+    """
+    Trains the CNN-GRu with DDP, runs the validation every epoch, 
+    saves 
+    - the snapshots and logs in train/validation
+    - losses to metrics_DPP/
+    - and TensorBoard in runs/
+    """
     def __init__(
             self,
             model:torch.nn.Module,
