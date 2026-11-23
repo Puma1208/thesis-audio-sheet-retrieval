@@ -15,3 +15,5 @@ drafts/
 
 DATA_COLLECTION_*/
 *.egg-info/
+
+.pytest_cache/

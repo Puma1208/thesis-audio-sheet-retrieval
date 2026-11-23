@@ -1,4 +1,4 @@
-from tqdm import tqdm 
+from tqdm import tqdm
 import os
 import json
 import pandas as pd
@@ -8,17 +8,24 @@ from  torchvision import transforms
 import torchvision.io as io
 
 
+def listdir_visible(path):
+    '''
+    os.listdir without hidden files such as macOS .DS_Store
+    '''
+    return [f for f in os.listdir(path) if not f.startswith('.')]
+
+
 class MSMD_Dataset(Dataset):
     '''
     Loading score snippets and the corresponding audio excerpts 
     to create a dataset of aligned images from both modalities
     '''
-    def __init__(self, 
-                 dir:str, 
-                 pieces:list, 
-                 snippets_folder_name:str='sheet_snippets', 
-                 excerpts_folder_name:str='performances', 
-                 snippets_batch_size=10, 
+    def __init__(self,
+                 dir:str,
+                 pieces:list,
+                 snippets_folder_name:str='sheet_snippets',
+                 excerpts_folder_name:str='performances',
+                 snippets_batch_size=10,
                  n_performances=5):
         self.dir = dir
         self.pieces_folders = pieces
@@ -29,12 +36,12 @@ class MSMD_Dataset(Dataset):
         self.transform = transforms.ToTensor()
         self.define_indeces_snippets(n_performances=n_performances)
         self.len = len(self.snippets_excerpts_df)
-    
+
     def __len__(self):
         if self.len is None:
             self.len = len(self.snippets_excerpts_df)
         return self.len
-    
+
     def __getitem__(self, index):
         '''
         Take N images from the piece-performance 
@@ -44,8 +51,8 @@ class MSMD_Dataset(Dataset):
         snippets_dir = starting_row['snippet_folder']
         excerpts_dir = starting_row['excerpt_folder']
 
-        all_snippets_perf = sorted(os.listdir(snippets_dir), key=lambda x:int(x.split('_')[-1].split('.')[0]))
-        all_excerpts_perf = sorted(os.listdir(excerpts_dir), key=lambda x:int(x.split('_')[-1].split('.')[0]))
+        all_snippets_perf = sorted(listdir_visible(snippets_dir), key=lambda x:int(x.split('_')[-1].split('.')[0]))
+        all_excerpts_perf = sorted(listdir_visible(excerpts_dir), key=lambda x:int(x.split('_')[-1].split('.')[0]))
 
         starting_snippet_excerpt_index = int(starting_row['snippet_path'].split('_')[-1].split('.')[0])
 
@@ -56,7 +63,7 @@ class MSMD_Dataset(Dataset):
             snippets.append(snippet)
             excerpt = io.read_image(os.path.join(excerpts_dir, all_excerpts_perf[i]), mode=io.ImageReadMode.GRAY)
             excerpts.append(excerpt)
-        
+
         return torch.cat(snippets, dim=0), torch.cat(excerpts, dim=0)
 
 
@@ -73,29 +80,28 @@ class MSMD_Dataset(Dataset):
             snippets_dir = os.path.join(piece_path, self.snippets_folder_name)
             excerpts_dir = os.path.join(piece_path, self.excerpts_folder_name)
             # print(snippets_dir)
-            for performance in sorted(os.listdir(snippets_dir)[:min(len(os.listdir(snippets_dir)), n_performances)]):
+            for performance in sorted(listdir_visible(snippets_dir)[:min(len(listdir_visible(snippets_dir)), n_performances)]):
             # for performance in os.listdir(snippets_dir)[:2]:
                 # print(performance)
                 snippets_perf_dir = os.path.join(snippets_dir, performance)
                 excerpts_perf_dir = os.path.join(excerpts_dir, performance)
 
-                amount_snippets = len(os.listdir(snippets_perf_dir))
+                amount_snippets = len(listdir_visible(snippets_perf_dir))
                 if amount_snippets<self.snippets_batch_size:
                     continue
                 max_image_index_performance = amount_snippets-self.snippets_batch_size
-                
+
                 # Iterate over the images to store them in the dataframe
-                all_snippets_perf = sorted(os.listdir(excerpts_perf_dir), key=lambda x:int(x.split('_')[-1].split('.')[0]))
-                all_excerpts_perf = sorted(os.listdir(snippets_perf_dir), key=lambda x:int(x.split('_')[-1].split('.')[0]))
-                for snippet_name, excerpt_name in zip(all_snippets_perf[:max_image_index_performance+1], 
+                all_snippets_perf = sorted(listdir_visible(excerpts_perf_dir), key=lambda x:int(x.split('_')[-1].split('.')[0]))
+                all_excerpts_perf = sorted(listdir_visible(snippets_perf_dir), key=lambda x:int(x.split('_')[-1].split('.')[0]))
+                for snippet_name, excerpt_name in zip(all_snippets_perf[:max_image_index_performance+1],
                                             all_excerpts_perf[:max_image_index_performance+1]):
-                    # self.snippets_excerpts_df = self.snippets_excerpts_df._append({'snippet_folder':snippets_perf_dir, 
-                    #                          'excerpt_folder':excerpts_perf_dir, 
-                    #                          'snippet_path':snippet_name, 
+                    # self.snippets_excerpts_df = self.snippets_excerpts_df._append({'snippet_folder':snippets_perf_dir,
+                    #                          'excerpt_folder':excerpts_perf_dir,
+                    #                          'snippet_path':snippet_name,
                     #                          'excerpt_path':excerpt_name}, ignore_index=True)
-                    snippets_excerpts_rows.append({'snippet_folder':snippets_perf_dir, 
-                                             'excerpt_folder':excerpts_perf_dir, 
-                                             'snippet_path':snippet_name, 
+                    snippets_excerpts_rows.append({'snippet_folder':snippets_perf_dir,
+                                             'excerpt_folder':excerpts_perf_dir,
+                                             'snippet_path':snippet_name,
                                              'excerpt_path':excerpt_name})
         self.snippets_excerpts_df = pd.DataFrame(snippets_excerpts_rows)
-
