@@ -1,13 +1,30 @@
-tqdm==4.19.2
-matplotlib==1.5.3
-seaborn==0.7.1
-pandas==0.18.1
-numpy==1.13.1
-#opencv_python==3.1.0.3
-opencv_python>=3.4.0.14
-scipy==0.19.1
-lasagne==0.1
-madmom==0.15.1
-omr==0.0.73
-theano==1.0.1
-PyYAML==3.12
+# ------------------------------------------------------------------
+# Training, testing and tests  (thesis/, tests/)
+# ------------------------------------------------------------------
+torch==2.15.0
+torchvision==0.29.2
+numpy==2.5.5
+pandas==3.1.1
+matplotlib==3.11.2
+tqdm==4.70.1
+tensorboard==2.21.0
+PyYAML==6.0.3
+pytest==9.2.0
+
+# ------------------------------------------------------------------
+# Dataset creation  (thesis/scripts/create_dataset.py)
+# ------------------------------------------------------------------
+# msmd fork with Python 3.12 / NumPy 2 fixes
+msmd @ git+https://github.com/Puma1208/msmd.git@thesis
+
+# msmd's setup.py declares no dependencies, so they are listed here
+scipy==1.18.1
+scikit-image==0.26.0
+opencv-python==5.1.0.95
+muscima==0.10.0
+pretty_midi==0.2.11.post0
+
+# The PyPI releases of madmom and dtw don't work on Python 3.12,
+# so these are installed from GitHub, pinned to the tested commits
+madmom @ git+https://github.com/CPJKU/madmom.git@27f032e8947204902c675e5e341a3faf5dc86dae
+dtw @ git+https://github.com/pierre-rouanet/dtw.git@74d9e55621cd4507e88bffa2c777b80fad86f954
