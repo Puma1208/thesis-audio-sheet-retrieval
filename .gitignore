@@ -20,3 +20,4 @@ DATA_COLLECTION_*/
 *.pt
 metrics_DDP/
 runs/
+!images/*.png
